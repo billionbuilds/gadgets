@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>APEC 2606 Weather Grid</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --card: #ffffff;
+      --ink: #111111;
+      --muted: #666666;
+      --line: rgba(17,17,17,0.08);
+      --accent: #d71920;
+      --weather-gradient: linear-gradient(180deg, rgba(247,247,244,0.92) 0%, rgba(255,255,255,1) 46%);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: start center;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 1120px;
+      padding: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--weather-gradient), var(--card);
+      border: 1px solid rgba(17,17,17,0.06);
+      border-radius: 17px;
+      padding: 16px;
+      min-width: 0;
+      overflow: hidden;
+      box-shadow:
+        0 1px 1px rgba(17,17,17,0.018),
+        0 2px 6px rgba(17,17,17,0.026);
+    }
+
+    .card.sunny {
+      --weather-gradient: linear-gradient(180deg, rgba(255,236,166,0.42) 0%, rgba(255,255,255,1) 46%);
+    }
+    .card.cloudy {
+      --weather-gradient: linear-gradient(180deg, rgba(224,228,234,0.52) 0%, rgba(255,255,255,1) 46%);
+    }
+    .card.fog {
+      --weather-gradient: linear-gradient(180deg, rgba(231,231,226,0.54) 0%, rgba(255,255,255,1) 46%);
+    }
+    .card.rain {
+      --weather-gradient: linear-gradient(180deg, rgba(203,226,255,0.52) 0%, rgba(255,255,255,1) 46%);
+    }
+    .card.storm {
+      --weather-gradient: linear-gradient(180deg, rgba(224,214,255,0.48) 0%, rgba(255,255,255,1) 46%);
+    }
+    .card.snow {
+      --weather-gradient: linear-gradient(180deg, rgba(222,246,255,0.54) 0%, rgba(255,255,255,1) 46%);
+    }
+
+    .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .city {
+      font-size: clamp(11px, 1.35vw, 14px);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      font-weight: 760;
+      line-height: 1.25;
+    }
+
+    .role {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: clamp(9px, 1.05vw, 11px);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .mode-toggle {
+      appearance: none;
+      border: 1px solid rgba(17,17,17,0.08);
+      background: rgba(255,255,255,0.56);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 2px;
+      display: inline-grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      cursor: pointer;
+      min-width: 72px;
+      height: 22px;
+      font-size: 9px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .mode-toggle span {
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      padding: 0 5px;
+      transition: background 120ms ease, color 120ms ease;
+    }
+
+    .mode-toggle[data-mode="current"] .now,
+    .mode-toggle[data-mode="trip"] .trip {
+      background: rgba(17,17,17,0.075);
+      color: var(--ink);
+      font-weight: 680;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0 15px;
+    }
+
+    .icon {
+      width: clamp(48px, 5.4vw, 58px);
+      height: clamp(48px, 5.4vw, 58px);
+      border: 1.5px solid currentColor;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: clamp(25px, 3.1vw, 31px);
+      line-height: 1;
+      color: var(--ink);
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", emoji, sans-serif;
+      text-rendering: optimizeLegibility;
+      background: rgba(255,255,255,0.86);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.5),
+        0 1px 3px rgba(17,17,17,0.018);
+    }
+
+    .icon.sunny { color: #d99a00; background: #fff7d8; }
+    .icon.cloudy { color: #667085; background: #eef1f4; }
+    .icon.fog { color: #8b8f97; background: #f2f2f0; }
+    .icon.rain { color: #1f6feb; background: #e8f1ff; }
+    .icon.storm { color: #6f42c1; background: #f1eaff; }
+    .icon.snow { color: #3898d8; background: #e9f8ff; }
+    .icon.unknown { color: #555555; background: #f4f4f1; }
+
+    .temp {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(30px, 4vw, 42px);
+      letter-spacing: -0.04em;
+      font-weight: 520;
+      line-height: 0.95;
+      white-space: nowrap;
+    }
+
+    .condition {
+      color: var(--muted);
+      font-size: clamp(10px, 1.15vw, 12px);
+      margin-top: 4px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 5px;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
+    .metric {
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 4px 2px;
+      min-width: 0;
+      box-shadow: none;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: clamp(8.5px, 1vw, 10.5px);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    .value {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(12px, 1.35vw, 15px);
+      font-weight: 680;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .footer {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+
+    .source a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .refresh-area {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .refresh {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--ink);
+      border-radius: 999px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      font-size: 16px;
+      cursor: pointer;
+      line-height: 1;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    }
+
+    .refresh:hover {
+      background: #f6f6f3;
+      border-color: rgba(17,17,17,0.18);
+    }
+
+    .refresh:active {
+      transform: translateY(1px);
+    }
+
+    .refresh:disabled {
+      opacity: 0.55;
+      cursor: progress;
+      animation: spin 900ms linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .error {
+      color: #a15c00;
+      font-size: 12px;
+      line-height: 1.4;
+      border: 1px solid rgba(161, 92, 0, 0.28);
+      background: rgba(161, 92, 0, 0.06);
+      padding: 12px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .wrap { padding: 10px 6px; }
+      .grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+      }
+      .card {
+        padding: 10px 7px;
+        border-radius: 13px;
+      }
+      .top {
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      .city {
+        font-size: clamp(8.5px, 2.15vw, 11px);
+        letter-spacing: 0.025em;
+      }
+      .role {
+        font-size: clamp(7.5px, 1.75vw, 9px);
+      }
+      .mode-toggle {
+        min-width: 58px;
+        height: 19px;
+        font-size: 7px;
+      }
+      .mode-toggle span {
+        padding: 0 3px;
+      }
+      .main {
+        grid-template-columns: auto minmax(0, 1fr);
+        justify-items: start;
+        text-align: left;
+        gap: 8px;
+        margin: 10px 0 11px;
+      }
+      .icon {
+        width: clamp(34px, 8.2vw, 44px);
+        height: clamp(34px, 8.2vw, 44px);
+        font-size: clamp(17px, 4.3vw, 22px);
+      }
+      .temp {
+        font-size: clamp(22px, 5.6vw, 29px);
+      }
+      .condition {
+        font-size: clamp(7.5px, 1.9vw, 9.5px);
+        line-height: 1.15;
+      }
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3px;
+        padding-top: 6px;
+      }
+      .metric {
+        padding: 3px 1px;
+      }
+      .label {
+        font-size: clamp(7px, 1.7vw, 8.5px);
+        letter-spacing: 0.01em;
+      }
+      .value {
+        font-size: clamp(9.5px, 2.25vw, 11px);
+      }
+    }
+
+    @media (max-width: 540px) {
+      .wrap { padding: 8px 4px; }
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .card {
+        padding: 8px 5px;
+        border-radius: 11px;
+        box-shadow:
+          0 1px 1px rgba(17,17,17,0.018),
+          0 2px 5px rgba(17,17,17,0.024);
+      }
+      .city {
+        font-size: 10px;
+        letter-spacing: 0.02em;
+      }
+      .role {
+        display: block;
+        font-size: 8px;
+      }
+      .mode-toggle {
+        min-width: 58px;
+        height: 19px;
+        font-size: 7px;
+      }
+      .main {
+        grid-template-columns: auto minmax(0, 1fr);
+        justify-items: start;
+        text-align: left;
+        gap: 7px;
+        margin: 9px 0 10px;
+      }
+      .icon {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+      }
+      .temp {
+        font-size: 25px;
+      }
+      .condition {
+        display: block;
+        font-size: 9px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3px;
+        padding-top: 5px;
+      }
+      .metric {
+        padding: 2px 1px;
+      }
+      .label {
+        font-size: 8px;
+      }
+      .value {
+        font-size: 11px;
+      }
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+      }
+      .refresh-area {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .wrap { padding: 8px 4px; }
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+      .card { padding: 8px 5px; }
+      .top {
+        justify-content: space-between;
+        text-align: left;
+      }
+      .mode-toggle {
+        min-width: 54px;
+      }
+      .city { font-size: 9px; }
+      .role { font-size: 7px; }
+      .icon {
+        width: 34px;
+        height: 34px;
+        font-size: 18px;
+      }
+      .temp { font-size: 23px; }
+      .condition {
+        display: block;
+        font-size: 8px;
+      }
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 320px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .card {
+        padding: 10px 8px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <main class="wrap" aria-label="APEC 2606 live weather grid">
+    <div id="error" class="error"></div>
+
+    <section id="grid" class="grid"></section>
+
+    <div class="footer">
+      <div class="source">Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></div>
+      <div class="refresh-area">
+        <div id="status" class="status">Loading…</div>
+        <button id="refresh" class="refresh" type="button" aria-label="Refresh weather data" title="Refresh weather">↻</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const cities = [
+      {
+        name: "Beijing",
+        role: "Start / Return",
+        zone: "UTC+8",
+        lat: 39.9042,
+        lon: 116.4074,
+        tripLabel: "Jun 4 + Jun 21",
+        periods: [
+          { start: "2026-06-04", end: "2026-06-04" },
+          { start: "2026-06-21", end: "2026-06-21" }
+        ]
+      },
+      {
+        name: "Hong Kong",
+        role: "Layover",
+        zone: "UTC+8",
+        lat: 22.3193,
+        lon: 114.1694,
+        tripLabel: "Jun 4 layover",
+        periods: [{ start: "2026-06-04", end: "2026-06-04" }]
+      },
+      {
+        name: "Jakarta",
+        role: "Stop 1",
+        zone: "UTC+7",
+        lat: -6.2088,
+        lon: 106.8456,
+        tripLabel: "Jun 4–7",
+        periods: [{ start: "2026-06-04", end: "2026-06-07" }]
+      },
+      {
+        name: "Bangkok",
+        role: "Stop 2 / Layover",
+        zone: "UTC+7",
+        lat: 13.7563,
+        lon: 100.5018,
+        tripLabel: "Jun 8–10 + Jun 13",
+        periods: [
+          { start: "2026-06-08", end: "2026-06-10" },
+          { start: "2026-06-13", end: "2026-06-13" }
+        ]
+      },
+      {
+        name: "Kuala Lumpur",
+        role: "Stop 3",
+        zone: "UTC+8",
+        lat: 3.1390,
+        lon: 101.6869,
+        tripLabel: "Jun 10–13",
+        periods: [{ start: "2026-06-10", end: "2026-06-13" }]
+      },
+      {
+        name: "Munich",
+        role: "Final stop",
+        zone: "CEST",
+        lat: 48.1351,
+        lon: 11.5820,
+        tripLabel: "Jun 14–20",
+        periods: [{ start: "2026-06-14", end: "2026-06-20" }]
+      }
+    ];
+
+    const codeMap = {
+      0:  { label: "Clear", icon: "☀️", style: "sunny", severity: 1 },
+      1:  { label: "Mostly clear", icon: "🌤️", style: "sunny", severity: 1 },
+      2:  { label: "Partly cloudy", icon: "⛅️", style: "cloudy", severity: 2 },
+      3:  { label: "Overcast", icon: "☁️", style: "cloudy", severity: 3 },
+      45: { label: "Fog", icon: "🌫️", style: "fog", severity: 4 },
+      48: { label: "Rime fog", icon: "🌫️", style: "fog", severity: 4 },
+      51: { label: "Light drizzle", icon: "🌦️", style: "rain", severity: 5 },
+      53: { label: "Drizzle", icon: "🌦️", style: "rain", severity: 5 },
+      55: { label: "Dense drizzle", icon: "🌧️", style: "rain", severity: 6 },
+      56: { label: "Freezing drizzle", icon: "🌧️", style: "rain", severity: 6 },
+      57: { label: "Freezing drizzle", icon: "🌧️", style: "rain", severity: 6 },
+      61: { label: "Light rain", icon: "🌦️", style: "rain", severity: 5 },
+      63: { label: "Rain", icon: "🌧️", style: "rain", severity: 6 },
+      65: { label: "Heavy rain", icon: "🌧️", style: "rain", severity: 7 },
+      66: { label: "Freezing rain", icon: "🌧️", style: "rain", severity: 7 },
+      67: { label: "Freezing rain", icon: "🌧️", style: "rain", severity: 7 },
+      71: { label: "Light snow", icon: "🌨️", style: "snow", severity: 6 },
+      73: { label: "Snow", icon: "❄️", style: "snow", severity: 7 },
+      75: { label: "Heavy snow", icon: "❄️", style: "snow", severity: 8 },
+      77: { label: "Snow grains", icon: "❄️", style: "snow", severity: 7 },
+      80: { label: "Rain showers", icon: "🌦️", style: "rain", severity: 5 },
+      81: { label: "Rain showers", icon: "🌧️", style: "rain", severity: 6 },
+      82: { label: "Heavy showers", icon: "🌧️", style: "rain", severity: 7 },
+      85: { label: "Snow showers", icon: "🌨️", style: "snow", severity: 6 },
+      86: { label: "Snow showers", icon: "🌨️", style: "snow", severity: 7 },
+      95: { label: "Thunderstorm", icon: "⛈️", style: "storm", severity: 9 },
+      96: { label: "Thunderstorm hail", icon: "🌩️", style: "storm", severity: 10 },
+      99: { label: "Thunderstorm hail", icon: "🌩️", style: "storm", severity: 10 }
+    };
+
+    function cardTemplate(city) {
+      const id = city.name.replace(/\s+/g, "-").toLowerCase();
+      return `
+        <article class="card" id="card-${id}" data-city="${id}" data-mode="current">
+          <div class="top">
+            <div>
+              <div class="city">${city.name}</div>
+              <div class="role">${city.role} · ${city.zone}</div>
+            </div>
+            <button class="mode-toggle" type="button" data-city="${id}" data-mode="current" aria-label="Toggle weather mode for ${city.name}">
+              <span class="now">Now</span>
+              <span class="trip">Trip</span>
+            </button>
+          </div>
+          <div class="main">
+            <div class="icon unknown">🌡️</div>
+            <div>
+              <div class="temp">--°</div>
+              <div class="condition">Loading…</div>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="label label-1">Feels</div>
+              <div class="value value-1">--°</div>
+            </div>
+            <div class="metric">
+              <div class="label label-2">Humidity</div>
+              <div class="value value-2">--%</div>
+            </div>
+            <div class="metric">
+              <div class="label label-3">Wind</div>
+              <div class="value value-3">--</div>
+            </div>
+            <div class="metric">
+              <div class="label label-4">Rain</div>
+              <div class="value value-4 precip">--</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function fmt(n, suffix = "") {
+      if (n === null || n === undefined || Number.isNaN(Number(n))) return "--";
+      return Math.round(Number(n)) + suffix;
+    }
+
+    function oneDecimal(n, suffix = "") {
+      if (n === null || n === undefined || Number.isNaN(Number(n))) return "--";
+      return Number(n).toFixed(1) + suffix;
+    }
+
+    function codeInfo(code) {
+      return codeMap[code] || { label: "Unknown", icon: "🌡️", style: "unknown", severity: 0 };
+    }
+
+    function setWeatherStyle(card, mapped) {
+      card.classList.remove("sunny", "cloudy", "fog", "rain", "storm", "snow");
+      if (mapped.style !== "unknown") card.classList.add(mapped.style);
+      const icon = card.querySelector(".icon");
+      icon.className = "icon " + mapped.style;
+      icon.textContent = mapped.icon;
+    }
+
+    function setMetric(card, index, label, value) {
+      card.querySelector(".label-" + index).textContent = label;
+      card.querySelector(".value-" + index).textContent = value;
+    }
+
+    function dateInPeriod(date, period) {
+      return date >= period.start && date <= period.end;
+    }
+
+    function aggregateTripForecast(city, weather) {
+      const daily = weather.daily;
+      if (!daily || !daily.time) return null;
+
+      const indices = daily.time
+        .map((date, index) => ({ date, index }))
+        .filter(item => city.periods.some(period => dateInPeriod(item.date, period)))
+        .map(item => item.index);
+
+      if (!indices.length) return null;
+
+      const maxTemps = indices.map(i => daily.temperature_2m_max?.[i]).filter(v => v !== null && v !== undefined);
+      const minTemps = indices.map(i => daily.temperature_2m_min?.[i]).filter(v => v !== null && v !== undefined);
+      const rainSums = indices.map(i => daily.precipitation_sum?.[i] || 0);
+      const rainChances = indices.map(i => daily.precipitation_probability_max?.[i]).filter(v => v !== null && v !== undefined);
+      const codes = indices.map(i => daily.weather_code?.[i]).filter(v => v !== null && v !== undefined);
+
+      const representative = codes
+        .map(code => ({ code, ...codeInfo(code) }))
+        .sort((a, b) => (b.severity || 0) - (a.severity || 0))[0] || codeInfo(null);
+
+      return {
+        mapped: representative,
+        high: maxTemps.length ? Math.max(...maxTemps) : null,
+        low: minTemps.length ? Math.min(...minTemps) : null,
+        rain: rainSums.reduce((a, b) => a + Number(b || 0), 0),
+        chance: rainChances.length ? Math.max(...rainChances) : null,
+        days: indices.length
+      };
+    }
+
+    function renderCurrent(city, weather) {
+      const id = "card-" + city.name.replace(/\s+/g, "-").toLowerCase();
+      const card = document.getElementById(id);
+      const c = weather.current || {};
+      const mapped = codeInfo(c.weather_code);
+
+      setWeatherStyle(card, mapped);
+
+      card.querySelector(".temp").textContent = fmt(c.temperature_2m, "°");
+      card.querySelector(".condition").textContent = mapped.label;
+
+      setMetric(card, 1, "Feels", fmt(c.apparent_temperature, "°"));
+      setMetric(card, 2, "Humidity", fmt(c.relative_humidity_2m, "%"));
+      setMetric(card, 3, "Wind", fmt(c.wind_speed_10m, " km/h"));
+      setMetric(card, 4, "Rain", oneDecimal(c.precipitation || 0, " mm"));
+    }
+
+    function renderTrip(city, weather) {
+      const id = "card-" + city.name.replace(/\s+/g, "-").toLowerCase();
+      const card = document.getElementById(id);
+      const forecast = aggregateTripForecast(city, weather);
+
+      if (!forecast) {
+        const mapped = { label: "Forecast soon", icon: "📅", style: "unknown" };
+        setWeatherStyle(card, mapped);
+        card.querySelector(".temp").textContent = "--°";
+        card.querySelector(".condition").textContent = city.tripLabel + " · forecast not available yet";
+        setMetric(card, 1, "High", "--");
+        setMetric(card, 2, "Low", "--");
+        setMetric(card, 3, "Rain", "--");
+        setMetric(card, 4, "Chance", "--");
+        return;
+      }
+
+      setWeatherStyle(card, forecast.mapped);
+      card.querySelector(".temp").textContent = `${fmt(forecast.low, "°")}–${fmt(forecast.high, "°")}`;
+      card.querySelector(".condition").textContent = `${city.tripLabel} · ${forecast.mapped.label}`;
+
+      setMetric(card, 1, "High", fmt(forecast.high, "°"));
+      setMetric(card, 2, "Low", fmt(forecast.low, "°"));
+      setMetric(card, 3, "Rain", oneDecimal(forecast.rain, " mm"));
+      setMetric(card, 4, "Chance", forecast.chance === null ? "--" : fmt(forecast.chance, "%"));
+    }
+
+    function renderMode(city, weather) {
+      const id = city.name.replace(/\s+/g, "-").toLowerCase();
+      const card = document.getElementById("card-" + id);
+      const mode = card.dataset.mode || "current";
+      if (mode === "trip") renderTrip(city, weather);
+      else renderCurrent(city, weather);
+    }
+
+    function renderSkeleton() {
+      document.getElementById("grid").innerHTML = cities.map(cardTemplate).join("");
+      document.querySelectorAll(".mode-toggle").forEach(button => {
+        button.addEventListener("click", () => {
+          const cityId = button.dataset.city;
+          const card = document.getElementById("card-" + cityId);
+          const nextMode = card.dataset.mode === "trip" ? "current" : "trip";
+          card.dataset.mode = nextMode;
+          button.dataset.mode = nextMode;
+          const city = cities.find(c => c.name.replace(/\s+/g, "-").toLowerCase() === cityId);
+          if (city && city.weather) renderMode(city, city.weather);
+        });
+      });
+    }
+
+    async function loadWeather() {
+      const refreshButton = document.getElementById("refresh");
+      if (refreshButton) {
+        refreshButton.disabled = true;
+        refreshButton.textContent = "↻";
+      }
+
+      const latitudes = cities.map(c => c.lat).join(",");
+      const longitudes = cities.map(c => c.lon).join(",");
+      const current = [
+        "temperature_2m",
+        "relative_humidity_2m",
+        "apparent_temperature",
+        "precipitation",
+        "weather_code",
+        "cloud_cover",
+        "wind_speed_10m",
+        "wind_gusts_10m"
+      ].join(",");
+      const daily = [
+        "weather_code",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_sum",
+        "precipitation_probability_max"
+      ].join(",");
+
+      const url =
+        "https://api.open-meteo.com/v1/forecast" +
+        "?latitude=" + encodeURIComponent(latitudes) +
+        "&longitude=" + encodeURIComponent(longitudes) +
+        "&current=" + encodeURIComponent(current) +
+        "&daily=" + encodeURIComponent(daily) +
+        "&temperature_unit=celsius" +
+        "&wind_speed_unit=kmh" +
+        "&precipitation_unit=mm" +
+        "&timezone=auto" +
+        "&forecast_days=16";
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Weather request failed: " + response.status);
+        const payload = await response.json();
+        const results = Array.isArray(payload) ? payload : [payload];
+
+        results.forEach((weather, index) => {
+          cities[index].weather = weather;
+          renderMode(cities[index], weather);
+        });
+
+        const updated = new Intl.DateTimeFormat("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        }).format(new Date());
+
+        document.getElementById("status").textContent = "Updated " + updated;
+      } catch (err) {
+        const error = document.getElementById("error");
+        error.style.display = "block";
+        error.textContent = "Weather data could not be loaded. Check connection or API availability.";
+        document.getElementById("status").textContent = "Unavailable";
+        console.error(err);
+      } finally {
+        if (refreshButton) {
+          refreshButton.disabled = false;
+          refreshButton.textContent = "↻";
+        }
+      }
+    }
+
+    renderSkeleton();
+    document.getElementById("refresh").addEventListener("click", loadWeather);
+    loadWeather();
+    setInterval(loadWeather, 15 * 60 * 1000);
+  </script>
+</body>
+</html>
