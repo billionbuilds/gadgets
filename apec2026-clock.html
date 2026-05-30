@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>APEC 2606 Clock Wall</title>
+  <style>
+    :root {
+      --bg: #f7f7f4;
+      --card: #ffffff;
+      --ink: #111111;
+      --muted: #6f6f6f;
+      --line: #d8d8d2;
+      --accent: #d71920;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+
+    .clock-wall {
+      width: min(1120px, 100%);
+      padding: 28px;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .title {
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 650;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .clocks {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(6px, 1.6vw, 18px);
+    }
+
+    .clock-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: clamp(10px, 2vw, 18px);
+      padding: clamp(10px, 2.2vw, 22px) clamp(6px, 1.8vw, 18px) clamp(9px, 1.8vw, 18px);
+      display: grid;
+      justify-items: center;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .face {
+      width: clamp(72px, 17vw, 190px);
+      aspect-ratio: 1 / 1;
+      margin-bottom: clamp(8px, 1.5vw, 16px);
+    }
+
+    .city {
+      font-size: clamp(8px, 1.7vw, 13px);
+      font-weight: 700;
+      letter-spacing: clamp(0.03em, 0.5vw, 0.12em);
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.28;
+    }
+
+    .zone {
+      color: var(--muted);
+      font-size: clamp(7px, 1.5vw, 11px);
+      letter-spacing: clamp(0.02em, 0.4vw, 0.08em);
+      text-transform: uppercase;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .digital {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(12px, 3.2vw, 24px);
+      letter-spacing: clamp(0.01em, 0.25vw, 0.06em);
+      margin-top: clamp(7px, 1.4vw, 12px);
+      font-weight: 520;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: clamp(8px, 1.6vw, 12px);
+      margin-top: 5px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .face circle.outer {
+      fill: #fff;
+      stroke: #111;
+      stroke-width: 3;
+    }
+
+    .tick {
+      stroke: #111;
+      stroke-linecap: round;
+    }
+
+    .tick.major { stroke-width: 3.5; }
+    .tick.minor { stroke-width: 1.2; opacity: 0.8; }
+
+    .hand-hour,
+    .hand-minute {
+      stroke: #111;
+      stroke-linecap: round;
+      transform-origin: 100px 100px;
+    }
+
+    .hand-hour { stroke-width: 6.5; }
+    .hand-minute { stroke-width: 4.5; }
+
+    .hand-second {
+      stroke: var(--accent);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      transform-origin: 100px 100px;
+    }
+
+    .pin {
+      fill: var(--accent);
+    }
+
+    @media (max-width: 760px) {
+      body { place-items: start center; }
+      .clock-wall { padding: 12px 8px; }
+      .title-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 10px;
+      }
+      .subtitle { white-space: normal; }
+      .clocks {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .clock-wall { padding: 10px 6px; }
+      .clock-card {
+        padding: 8px 4px 7px;
+      }
+      .face {
+        width: clamp(58px, 18vw, 72px);
+      }
+      .city {
+        font-size: 7px;
+        letter-spacing: 0.02em;
+      }
+      .zone {
+        font-size: 7px;
+      }
+      .digital {
+        font-size: 11px;
+      }
+      .date {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="clock-wall" aria-label="APEC 2606 travel time zone clock wall">
+    <div class="title-row">
+      <div class="title">APEC 2606 · Clock Wall</div>
+      <div class="subtitle">Travel time zones</div>
+    </div>
+
+    <section class="clocks">
+      <article class="clock-card" data-zone="Asia/Shanghai">
+        <svg class="face" viewBox="0 0 200 200" role="img" aria-label="UTC+8 analog clock">
+          <circle class="outer" cx="100" cy="100" r="92"></circle>
+          <g class="ticks"></g>
+          <line class="hand-hour" x1="100" y1="100" x2="100" y2="56"></line>
+          <line class="hand-minute" x1="100" y1="100" x2="100" y2="34"></line>
+          <line class="hand-second" x1="100" y1="116" x2="100" y2="28"></line>
+          <circle class="pin" cx="100" cy="100" r="5"></circle>
+        </svg>
+        <div class="city">Beijing · Hong Kong<br>Kuala Lumpur</div>
+        <div class="zone">UTC+8</div>
+        <div class="digital">--:--:--</div>
+        <div class="date">---</div>
+      </article>
+
+      <article class="clock-card" data-zone="Asia/Bangkok">
+        <svg class="face" viewBox="0 0 200 200" role="img" aria-label="UTC+7 analog clock">
+          <circle class="outer" cx="100" cy="100" r="92"></circle>
+          <g class="ticks"></g>
+          <line class="hand-hour" x1="100" y1="100" x2="100" y2="56"></line>
+          <line class="hand-minute" x1="100" y1="100" x2="100" y2="34"></line>
+          <line class="hand-second" x1="100" y1="116" x2="100" y2="28"></line>
+          <circle class="pin" cx="100" cy="100" r="5"></circle>
+        </svg>
+        <div class="city">Jakarta · Bangkok</div>
+        <div class="zone">UTC+7</div>
+        <div class="digital">--:--:--</div>
+        <div class="date">---</div>
+      </article>
+
+      <article class="clock-card" data-zone="Europe/Berlin">
+        <svg class="face" viewBox="0 0 200 200" role="img" aria-label="Munich analog clock">
+          <circle class="outer" cx="100" cy="100" r="92"></circle>
+          <g class="ticks"></g>
+          <line class="hand-hour" x1="100" y1="100" x2="100" y2="56"></line>
+          <line class="hand-minute" x1="100" y1="100" x2="100" y2="34"></line>
+          <line class="hand-second" x1="100" y1="116" x2="100" y2="28"></line>
+          <circle class="pin" cx="100" cy="100" r="5"></circle>
+        </svg>
+        <div class="city">Munich</div>
+        <div class="zone">CEST · UTC+2</div>
+        <div class="digital">--:--:--</div>
+        <div class="date">---</div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    function buildTicks(svg) {
+      const group = svg.querySelector(".ticks");
+      for (let i = 0; i < 60; i++) {
+        const angle = (i * 6 - 90) * Math.PI / 180;
+        const major = i % 5 === 0;
+        const r1 = major ? 78 : 84;
+        const r2 = 88;
+        const x1 = 100 + Math.cos(angle) * r1;
+        const y1 = 100 + Math.sin(angle) * r1;
+        const x2 = 100 + Math.cos(angle) * r2;
+        const y2 = 100 + Math.sin(angle) * r2;
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1.toFixed(2));
+        line.setAttribute("y1", y1.toFixed(2));
+        line.setAttribute("x2", x2.toFixed(2));
+        line.setAttribute("y2", y2.toFixed(2));
+        line.setAttribute("class", "tick " + (major ? "major" : "minor"));
+        group.appendChild(line);
+      }
+    }
+
+    function partsForZone(zone) {
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: zone,
+        hour12: false,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        weekday: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }).formatToParts(now).reduce((acc, part) => {
+        acc[part.type] = part.value;
+        return acc;
+      }, {});
+      return {
+        hour: Number(parts.hour),
+        minute: Number(parts.minute),
+        second: Number(parts.second),
+        date: parts.weekday + " · " + parts.year + "-" + parts.month + "-" + parts.day,
+        digital: parts.hour + ":" + parts.minute + ":" + parts.second
+      };
+    }
+
+    function updateClock(card) {
+      const zone = card.dataset.zone;
+      const t = partsForZone(zone);
+
+      const secondAngle = t.second * 6;
+      const minuteAngle = (t.minute + t.second / 60) * 6;
+      const hourAngle = ((t.hour % 12) + t.minute / 60 + t.second / 3600) * 30;
+
+      card.querySelector(".hand-hour").style.transform = "rotate(" + hourAngle + "deg)";
+      card.querySelector(".hand-minute").style.transform = "rotate(" + minuteAngle + "deg)";
+      card.querySelector(".hand-second").style.transform = "rotate(" + secondAngle + "deg)";
+
+      card.querySelector(".digital").textContent = t.digital;
+      card.querySelector(".date").textContent = t.date;
+    }
+
+    document.querySelectorAll(".face").forEach(buildTicks);
+
+    function tick() {
+      document.querySelectorAll(".clock-card").forEach(updateClock);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
