@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>APEC 2606 Hotel Cards</title>
+  <style>
+    :root {
+      --bg: transparent;
+      --card: rgba(255,255,255,0.96);
+      --ink: #111111;
+      --muted: #6b6b6b;
+      --line: rgba(17,17,17,0.08);
+      --pink: rgba(238,203,221,0.50);
+      --yellow: rgba(244,232,174,0.52);
+      --blue: rgba(201,224,242,0.54);
+      --green: rgba(211,228,213,0.58);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body { min-height: 100vh; display: grid; place-items: start center; }
+    .wrap { width: 100%; max-width: 1180px; padding: 10px; }
+    .hotel-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+    .hotel-card {
+      --tint: rgba(240,239,235,0.72);
+      background: linear-gradient(180deg, var(--tint) 0%, rgba(255,255,255,0.98) 43%), var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: clamp(14px, 1.55vw, 18px);
+      min-width: 0;
+      overflow: hidden;
+      box-shadow: 0 1px 1px rgba(17,17,17,0.016), 0 2px 6px rgba(17,17,17,0.024);
+    }
+    .hotel-card.pink { --tint: var(--pink); }
+    .hotel-card.yellow { --tint: var(--yellow); }
+    .hotel-card.blue { --tint: var(--blue); }
+    .hotel-card.green { --tint: var(--green); }
+
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .city { font-size: clamp(13px, 1.15vw, 16px); font-weight: 780; letter-spacing: 0.04em; line-height: 1.2; white-space: nowrap; }
+    .city span { color: var(--muted); font-size: 0.72em; font-weight: 560; letter-spacing: 0.04em; text-transform: none; }
+    .country { margin-top: 4px; color: var(--muted); font-size: clamp(9px, 0.9vw, 11px); line-height: 1.25; letter-spacing: 0.04em; }
+
+    .seq {
+      width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; flex: 0 0 auto;
+      background: rgba(255,255,255,0.72); border: 1px solid var(--line); color: var(--muted);
+      font-size: 10px; font-weight: 760; font-variant-numeric: tabular-nums;
+    }
+    .hotel-name {
+      min-height: 54px; display: flex; align-items: flex-end;
+      font-size: clamp(21px, 2vw, 28px); line-height: 0.98; font-weight: 560;
+      letter-spacing: -0.045em; margin-bottom: 16px;
+    }
+    .stay-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
+    .stay-box { border-top: 1px solid var(--line); padding-top: 7px; min-width: 0; }
+    .label { color: var(--muted); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
+    .value { font-size: clamp(13px, 1.15vw, 16px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; white-space: nowrap; }
+
+    .address-block { border-top: 1px solid var(--line); padding-top: 10px; min-height: 92px; }
+    .address { color: #222; font-size: clamp(11px, 1vw, 13px); line-height: 1.4; }
+
+    .copy-source {
+      position: absolute;
+      left: -9999px;
+      top: auto;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 11px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+    .action-buttons {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      display: inline-grid;
+      place-items: center;
+      color: var(--ink);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.62);
+      border-radius: 999px;
+      padding: 0;
+      white-space: nowrap;
+      font-size: 16px;
+      line-height: 1;
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", emoji, sans-serif;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      cursor: pointer;
+      appearance: none;
+    }
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.86);
+      border-color: rgba(17,17,17,0.18);
+    }
+    .copy-btn.copied {
+      background: rgba(17,17,17,0.86);
+      color: #ffffff;
+      border-color: rgba(17,17,17,0.86);
+    }
+    .booking-btn {
+      font-size: 15px;
+    }
+    .disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+    .disabled:hover {
+      transform: none;
+      background: rgba(255,255,255,0.62);
+      border-color: var(--line);
+    }
+
+    @media (max-width: 760px) {
+      .hotel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .hotel-card { border-radius: 18px; padding: 14px; }
+      .hotel-name { min-height: 44px; }
+      .address-block { min-height: 76px; }
+    }
+    @media (max-width: 360px) {
+      .hotel-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap" aria-label="APEC 2606 hotel cards">
+    <section class="hotel-grid">
+
+      <article class="hotel-card pink">
+        <div class="card-top">
+          <div>
+            <div class="city">Jakarta <span>雅加达</span></div>
+            <div class="country">Indonesia · 第一站｜抵达与雅加达段访谈 / 会议</div>
+          </div>
+          <div class="seq">01</div>
+        </div>
+
+        <div class="hotel-name">Discovery SCBD</div>
+
+        <div class="stay-row">
+          <div class="stay-box"><div class="label">IN</div><div class="value">6/4</div></div>
+          <div class="stay-box"><div class="label">OUT</div><div class="value">6/7</div></div>
+          <div class="stay-box nights"><div class="label">STAY</div><div class="value">3晚</div></div>
+        </div>
+
+        <div class="address-block">
+          <div class="label">ADDRESS</div>
+          <div class="address">SCBD Lot Jl. Jend. Sudirman kav 52-53 No.11, Senayan, South Jakarta, Indonesia</div>
+        </div>
+
+        <textarea class="copy-source" aria-hidden="true" tabindex="-1">Hotel: Discovery SCBD
+City: Jakarta / 雅加达 · Indonesia
+Stay: 6/4 → 6/7 (3晚)
+Phone: +62 21 515 2390
+Address: SCBD Lot Jl. Jend. Sudirman kav 52-53 No.11, Senayan, South Jakarta, Indonesia
+Map: https://www.google.com/maps/search/?api=1&amp;query=Discovery+SCBD%2C+SCBD+Lot+Jl.+Jend.+Sudirman+kav+52-53+No.11%2C+Senayan%2C+South+Jakarta%2C+Indonesia
+Booking: https://www.booking.com/searchresults.html?lang=en-us&amp;ss=Discovery+SCBD+Jakarta+Indonesia</textarea>
+
+        <div class="actions">
+          <div class="action-buttons">
+            <a class="icon-btn map-pin" href="https://www.google.com/maps/search/?api=1&amp;query=Discovery+SCBD%2C+SCBD+Lot+Jl.+Jend.+Sudirman+kav+52-53+No.11%2C+Senayan%2C+South+Jakarta%2C+Indonesia" target="_blank" rel="noopener noreferrer" title="Open in Google Maps" aria-label="Open hotel location in Google Maps" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">📍</a>
+            <a class="icon-btn call-btn" href="tel:+62215152390" title="Call hotel" aria-label="Call hotel">📞</a>
+            <a class="icon-btn booking-btn" href="https://www.booking.com/searchresults.html?lang=en-us&amp;ss=Discovery+SCBD+Jakarta+Indonesia" target="_blank" rel="noopener noreferrer" title="Open Booking.com in English" aria-label="Open hotel on Booking.com in English" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">🔗</a>
+            <button class="icon-btn copy-btn" type="button" title="Copy hotel info" aria-label="Copy hotel info" onclick="copyHotelInfo(this)">📋</button>
+          </div>
+        </div>
+      </article>
+    
+      <article class="hotel-card yellow">
+        <div class="card-top">
+          <div>
+            <div class="city">Bangkok <span>曼谷</span></div>
+            <div class="country">Thailand · 第二站｜曼谷段访谈 / 会议 / 调研</div>
+          </div>
+          <div class="seq">02</div>
+        </div>
+
+        <div class="hotel-name">Lancaster Bangkok</div>
+
+        <div class="stay-row">
+          <div class="stay-box"><div class="label">IN</div><div class="value">6/7</div></div>
+          <div class="stay-box"><div class="label">OUT</div><div class="value">6/10</div></div>
+          <div class="stay-box nights"><div class="label">STAY</div><div class="value">3晚</div></div>
+        </div>
+
+        <div class="address-block">
+          <div class="label">ADDRESS</div>
+          <div class="address">1777 New Phetchaburi Road, Huai Khwang, Bangkok 10310, Thailand</div>
+        </div>
+
+        <textarea class="copy-source" aria-hidden="true" tabindex="-1">Hotel: Lancaster Bangkok
+City: Bangkok / 曼谷 · Thailand
+Stay: 6/7 → 6/10 (3晚)
+Phone: +66 2 262 8000
+Address: 1777 New Phetchaburi Road, Huai Khwang, Bangkok 10310, Thailand
+Map: https://www.google.com/maps/search/?api=1&amp;query=Lancaster+Bangkok%2C+1777+New+Phetchaburi+Road%2C+Huai+Khwang%2C+Bangkok+10310%2C+Thailand
+Booking: https://www.booking.com/hotel/th/lancaster-bangkok.en-gb.html</textarea>
+
+        <div class="actions">
+          <div class="action-buttons">
+            <a class="icon-btn map-pin" href="https://www.google.com/maps/search/?api=1&amp;query=Lancaster+Bangkok%2C+1777+New+Phetchaburi+Road%2C+Huai+Khwang%2C+Bangkok+10310%2C+Thailand" target="_blank" rel="noopener noreferrer" title="Open in Google Maps" aria-label="Open hotel location in Google Maps" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">📍</a>
+            <a class="icon-btn call-btn" href="tel:+6622628000" title="Call hotel" aria-label="Call hotel">📞</a>
+            <a class="icon-btn booking-btn" href="https://www.booking.com/hotel/th/lancaster-bangkok.en-gb.html" target="_blank" rel="noopener noreferrer" title="Open Booking.com in English" aria-label="Open hotel on Booking.com in English" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">🔗</a>
+            <button class="icon-btn copy-btn" type="button" title="Copy hotel info" aria-label="Copy hotel info" onclick="copyHotelInfo(this)">📋</button>
+          </div>
+        </div>
+      </article>
+    
+      <article class="hotel-card blue">
+        <div class="card-top">
+          <div>
+            <div class="city">Kuala Lumpur <span>吉隆坡</span></div>
+            <div class="country">Malaysia · 第三站｜吉隆坡段访谈和会议</div>
+          </div>
+          <div class="seq">03</div>
+        </div>
+
+        <div class="hotel-name">VE Hotel &amp; Residence</div>
+
+        <div class="stay-row">
+          <div class="stay-box"><div class="label">IN</div><div class="value">6/10</div></div>
+          <div class="stay-box"><div class="label">OUT</div><div class="value">6/13</div></div>
+          <div class="stay-box nights"><div class="label">STAY</div><div class="value">3晚</div></div>
+        </div>
+
+        <div class="address-block">
+          <div class="label">ADDRESS</div>
+          <div class="address">8 Jalan Kerinchi, Bangsar South, Kuala Lumpur 59200, Malaysia</div>
+        </div>
+
+        <textarea class="copy-source" aria-hidden="true" tabindex="-1">Hotel: VE Hotel &amp; Residence
+City: Kuala Lumpur / 吉隆坡 · Malaysia
+Stay: 6/10 → 6/13 (3晚)
+Phone: +60 3 2246 2888
+Address: 8 Jalan Kerinchi, Bangsar South, Kuala Lumpur 59200, Malaysia
+Map: https://www.google.com/maps/search/?api=1&amp;query=VE+Hotel+%26+Residence%2C+8+Jalan+Kerinchi%2C+Bangsar+South%2C+Kuala+Lumpur+59200%2C+Malaysia
+Booking: https://www.booking.com/hotel/my/ve-hotel-residence.en-gb.html</textarea>
+
+        <div class="actions">
+          <div class="action-buttons">
+            <a class="icon-btn map-pin" href="https://www.google.com/maps/search/?api=1&amp;query=VE+Hotel+%26+Residence%2C+8+Jalan+Kerinchi%2C+Bangsar+South%2C+Kuala+Lumpur+59200%2C+Malaysia" target="_blank" rel="noopener noreferrer" title="Open in Google Maps" aria-label="Open hotel location in Google Maps" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">📍</a>
+            <a class="icon-btn call-btn" href="tel:+60322462888" title="Call hotel" aria-label="Call hotel">📞</a>
+            <a class="icon-btn booking-btn" href="https://www.booking.com/hotel/my/ve-hotel-residence.en-gb.html" target="_blank" rel="noopener noreferrer" title="Open Booking.com in English" aria-label="Open hotel on Booking.com in English" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">🔗</a>
+            <button class="icon-btn copy-btn" type="button" title="Copy hotel info" aria-label="Copy hotel info" onclick="copyHotelInfo(this)">📋</button>
+          </div>
+        </div>
+      </article>
+    
+      
+      <article class="hotel-card green">
+        <div class="card-top">
+          <div>
+            <div class="city">Munich <span>慕尼黑</span></div>
+            <div class="country">Germany · 第四站｜德国 / 慕尼黑段</div>
+          </div>
+          <div class="seq">04</div>
+        </div>
+
+        <div class="hotel-name">Leonardo Royal Hotel Munich</div>
+
+        <div class="stay-row">
+          <div class="stay-box"><div class="label">IN</div><div class="value">6/14</div></div>
+          <div class="stay-box"><div class="label">OUT</div><div class="value">6/20</div></div>
+          <div class="stay-box nights"><div class="label">STAY</div><div class="value">6晚</div></div>
+        </div>
+
+        <div class="address-block">
+          <div class="label">ADDRESS</div>
+          <div class="address">Moosacher Str. 90, 80809 München, Germany</div>
+        </div>
+
+        <textarea class="copy-source" aria-hidden="true" tabindex="-1">Hotel: Leonardo Royal Hotel Munich
+City: Munich / 慕尼黑 · Germany
+Stay: 6/14 → 6/20 (6晚)
+Phone: +49 89 2885380
+Address: Moosacher Str. 90, 80809 München, Germany
+Map: https://maps.app.goo.gl/Vh92MTT3xmCRGVTM9
+Booking: https://www.booking.com/Share-MJAjbQ</textarea>
+
+        <div class="actions">
+          <div class="action-buttons">
+            <a class="icon-btn map-pin" href="https://maps.app.goo.gl/Vh92MTT3xmCRGVTM9" target="_blank" rel="noopener noreferrer" title="Open in Google Maps" aria-label="Open hotel location in Google Maps" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">📍</a>
+            <a class="icon-btn call-btn" href="tel:+49892885380" title="Call hotel" aria-label="Call hotel">📞</a>
+            <a class="icon-btn booking-btn" href="https://www.booking.com/Share-MJAjbQ" target="_blank" rel="noopener noreferrer" title="Open Booking.com in English" aria-label="Open hotel on Booking.com in English" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">🔗</a>
+            <button class="icon-btn copy-btn" type="button" title="Copy hotel info" aria-label="Copy hotel info" onclick="copyHotelInfo(this)">📋</button>
+          </div>
+        </div>
+      </article>
+
+    
+    </section>
+  </main>
+
+  <script>
+    async function copyTextPlain(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.top = "-1000px";
+      area.style.left = "-1000px";
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      document.execCommand("copy");
+      document.body.removeChild(area);
+    }
+
+    async function copyHotelInfo(button) {
+      const card = button.closest(".hotel-card");
+      const source = card ? card.querySelector(".copy-source") : null;
+      if (!source) return;
+
+      try {
+        await copyTextPlain(source.value);
+        const old = button.textContent;
+        button.textContent = "✓";
+        button.classList.add("copied");
+        setTimeout(() => {
+          button.textContent = old;
+          button.classList.remove("copied");
+        }, 1100);
+      } catch (err) {
+        console.error("Copy failed", err);
+        button.textContent = "!";
+        setTimeout(() => { button.textContent = "📋"; }, 1100);
+      }
+    }
+  </script>
+</body>
+</html>
